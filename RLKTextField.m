@@ -7,42 +7,9 @@
 //
 
 #import "RLKTextField.h"
-#import <objc/runtime.h>
-#import <objc/message.h>
-
-//static void switchMethod(Class aClass, SEL originMeth, SEL newMeth)
-//{
-//    Method origMethod = class_getInstanceMethod(aClass, originMeth);
-//    Method newMethod = class_getInstanceMethod(aClass, newMeth);
-//
-//    method_exchangeImplementations(origMethod, newMethod);
-//}
-
 @implementation RLKTextField
 
-//+ (void)load{
-//    NSLog(@"load");
-//    switchMethod([self class], @selector(sendAction:to:forEvent:), @selector(ucar_sendAction:to:forEvent:));
-//}
-
-- (NSString *)seperatorChar{
-    if (_seperatorChar.length == 0) {
-        return @"";
-    }
-    return _seperatorChar;
-}
-- (void)setFormat:(NSArray *)format{
-    if (format.count <= 1) {
-        return;
-    }
-    for (NSNumber* length in format) {
-        if (![length isKindOfClass:[NSNumber class]] || length.integerValue == 0) {
-            return;
-        }
-    }
-    _format = format;
-}
-
+#pragma mark - life
 - (instancetype)initWithFrame:(CGRect)frame{
     if (self = [super initWithFrame:frame]) {
         [self config];
@@ -64,6 +31,28 @@
     self.keyboardType = UIKeyboardTypeNumberPad;
 }
 
+#pragma mark - helper
+
+- (NSString *)seperatorChar{
+    if (_seperatorChar.length == 0) {
+        return @"";
+    }
+    return _seperatorChar;
+}
+- (void)setFormat:(NSArray *)format{
+    if (format.count <= 1) {
+        return;
+    }
+    for (NSNumber* length in format) {
+        if (![length isKindOfClass:[NSNumber class]] || length.integerValue == 0) {
+            return;
+        }
+    }
+    _format = format;
+}
+
+
+
 - (NSString*)subStringOf:(NSString*)rawString toIndex:(NSInteger) index{
     if (index <= 0) {
         return @"";
@@ -74,6 +63,22 @@
     
     return [rawString substringToIndex:index];
 }
+
+- (NSInteger)limitLength{
+    NSInteger limitCount = 0;
+    for (NSNumber* subCount in _format) {
+        limitCount += subCount.integerValue;
+    }
+    return limitCount;
+}
+
+- (NSString*)stringByRemoveSeparateCharInString:(NSString*)string{
+    NSString* clearSeparatorString = [string stringByReplacingOccurrencesOfString:self.seperatorChar withString:@""];
+    clearSeparatorString = [clearSeparatorString stringByReplacingOccurrencesOfString:@" " withString:@""];
+    return [clearSeparatorString stringByReplacingOccurrencesOfString:@"\\p{Cf}" withString:@"" options:NSRegularExpressionSearch range:NSMakeRange(0, clearSeparatorString.length)];
+}
+
+#pragma mark - textField process
 
 - (void)textDidChangeWithTextField:(UITextField*)textField {
     NSLog(@"change to %@",textField.text);
@@ -126,19 +131,7 @@
     }
 }
 
-- (NSInteger)limitLength{
-    NSInteger limitCount = 0;
-    for (NSNumber* subCount in _format) {
-        limitCount += subCount.integerValue;
-    }
-    return limitCount;
-}
 
-- (NSString*)stringByRemoveSeparateCharInString:(NSString*)string{
-    NSString* clearSeparatorString = [string stringByReplacingOccurrencesOfString:self.seperatorChar withString:@""];
-    clearSeparatorString = [clearSeparatorString stringByReplacingOccurrencesOfString:@" " withString:@""];
-    return [clearSeparatorString stringByReplacingOccurrencesOfString:@"\\p{Cf}" withString:@"" options:NSRegularExpressionSearch range:NSMakeRange(0, clearSeparatorString.length)];
-}
 
 - (BOOL)shouldChangeStringInRange:(NSRange)range toString:(NSString *)string{
     NSLog(@"[%@] -> [%@] @ (%ld , %ld)",self.text,string,range.location,range.length);
