@@ -10,7 +10,6 @@
 #import "RLKTextField.h"
 @interface ViewController ()<UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet RLKTextField *textField;
-
 @end
 
 @implementation ViewController
@@ -30,7 +29,6 @@
     }
     return YES;
 }
-
 
 
 

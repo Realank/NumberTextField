@@ -43,8 +43,8 @@
     _format = format;
 }
 
-- (instancetype)init{
-    if (self = [super init]) {
+- (instancetype)initWithFrame:(CGRect)frame{
+    if (self = [super initWithFrame:frame]) {
         [self config];
     }
     
@@ -53,6 +53,10 @@
 - (void)awakeFromNib{
     [super awakeFromNib];
     [self config];
+}
+
+- (void)dealloc{
+    NSLog(@"%@ dealloc",NSStringFromClass([self class]));
 }
 
 - (void)config{
@@ -74,7 +78,7 @@
 - (void)textDidChangeWithTextField:(UITextField*)textField {
     NSLog(@"change to %@",textField.text);
     if (_format) {
-        NSString* rawString = [textField.text stringByReplacingOccurrencesOfString:self.seperatorChar withString:@""];
+        NSString* rawString = [self stringByRemoveSeparateCharInString:textField.text];
         NSInteger startIndex = 0;
         NSMutableArray* subStringsM = [NSMutableArray array];
         for (NSNumber* length in _format) {
@@ -106,10 +110,11 @@
                 location = 0;
             }
             if (location > separatedString.length) {
-                location = separatedString.length;
+                location = separatedString.length -1;
             }
             textField.text = separatedString;
 
+            beginning = self.beginningOfDocument;
             UITextPosition* startPosition = [self positionFromPosition:beginning offset:location];
             UITextPosition* endPosition = [self positionFromPosition:beginning offset:location];
             UITextRange* selectionRange = [self textRangeFromPosition:startPosition toPosition:endPosition];
@@ -127,6 +132,12 @@
         limitCount += subCount.integerValue;
     }
     return limitCount;
+}
+
+- (NSString*)stringByRemoveSeparateCharInString:(NSString*)string{
+    NSString* clearSeparatorString = [string stringByReplacingOccurrencesOfString:self.seperatorChar withString:@""];
+    clearSeparatorString = [clearSeparatorString stringByReplacingOccurrencesOfString:@" " withString:@""];
+    return [clearSeparatorString stringByReplacingOccurrencesOfString:@"\\p{Cf}" withString:@"" options:NSRegularExpressionSearch range:NSMakeRange(0, clearSeparatorString.length)];
 }
 
 - (BOOL)shouldChangeStringInRange:(NSRange)range toString:(NSString *)string{
@@ -151,7 +162,7 @@
     //输入内容判断
 
     NSPredicate *numberPre = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", @"[0-9]*"];
-    NSString* clearSeparatorString = [string stringByReplacingOccurrencesOfString:self.seperatorChar withString:@""];
+    NSString* clearSeparatorString = [self stringByRemoveSeparateCharInString:string];
     if (![clearSeparatorString isEqualToString:@""] && ![numberPre evaluateWithObject:clearSeparatorString])
     {
         NSLog(@"输入内容不合法");
